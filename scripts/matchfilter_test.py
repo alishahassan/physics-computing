@@ -11,41 +11,52 @@ def define_match_filter(a, b, stream): # multiplies two arrays, performs the IFF
     reshaped_result = ifft_result.reshape(ifft_result.size) # reshapes the IFFT result
     return mx.eval(mx.max(reshaped_result, stream=stream)) # returns max val
 
-list_size = 5
-array_size = 1024
+def frozen_cpumatchfilter(ab):
+                return define_match_filter(*ab, stream=mx.cpu)
 
-a_list = [mx.random.normal(shape=(array_size,), dtype=mx.float32) for _ in range(list_size)]
-b_list = [mx.random.normal(shape=(array_size,), dtype=mx.float32) for _ in range(list_size)]
+def frozen_gpumatchfilter(ab):
+                return define_match_filter(*ab, stream=mx.gpu)
 
-cpu_max_values = []
-gpu_max_values = []
+if __name__ == "__main__":
+    list_size = 5
+    array_size = 1024
 
-# running on a single core for CPU and GPU
-for a, b in zip(a_list, b_list):
-    cpu_max_values.append(define_match_filter(a, b, stream=mx.cpu))
-    gpu_max_values.append(define_match_filter(a, b, stream=mx.gpu))
+    a_list = [mx.random.normal(shape=(array_size,), dtype=mx.float32) for _ in range(list_size)]
+    b_list = [mx.random.normal(shape=(array_size,), dtype=mx.float32) for _ in range(list_size)]
 
-# parallelizing the task (cores 1-4)
-cpu_times_parallel = []
-gpu_times_parallel = []
+    cpu_max_values = []
+    gpu_max_values = []
 
-with concurrent.futures.ThreadPoolExecutor(max_workers=4) as executor:
-    start_time = time.perf_counter()
-    cpu_results = list(executor.map(lambda p: define_match_filter(*p, stream=mx.cpu), zip(a_list, b_list)))
-    cpu_time_parallel = time.perf_counter() - start_time
-    cpu_times_parallel.append(cpu_time_parallel)
+    # running on a single core for CPU and GPU
+    for a, b in zip(a_list, b_list):
+        cpu_max_values.append(define_match_filter(a, b, stream=mx.cpu))
+        gpu_max_values.append(define_match_filter(a, b, stream=mx.gpu))
 
-    start_time = time.perf_counter()
-    gpu_results = list(executor.map(lambda p: define_match_filter(*p, stream=mx.gpu), zip(a_list, b_list)))
-    gpu_time_parallel = time.perf_counter() - start_time
-    gpu_times_parallel.append(gpu_time_parallel)
+    # parallelizing the task (cores 1-4)
+    cpu_times_parallel = []
+    gpu_times_parallel = []
 
-plt.figure(figsize=(10, 6))
-plt.plot([1, 2, 3, 4], cpu_times_parallel * 4, label="CPU (Parallel)", marker='o')
-plt.plot([1, 2, 3, 4], gpu_times_parallel * 4, label="GPU (Parallel)", marker='x')
-plt.xlabel("Number of Cores")
-plt.ylabel("Time (seconds)")
-plt.title("Performance of Match Filter on CPU vs GPU (Parallelized)")
-plt.legend()
-plt.grid(True)
-plt.show()
+    test_cores = [1,2,3,4]
+
+    for ncores in test_cores:
+        with concurrent.futures.ProcessPoolExecutor(max_workers= ncores) as executor:
+            start_time = time.perf_counter()
+            cpu_results = list(executor.map(frozen_cpumatchfilter, zip(a_list, b_list)))
+            cpu_time_parallel = time.perf_counter() - start_time
+            cpu_times_parallel.append(cpu_time_parallel)
+
+            start_time = time.perf_counter()
+            gpu_results = list(executor.map(frozen_gpumatchfilter, zip(a_list, b_list)))
+            gpu_time_parallel = time.perf_counter() - start_time
+            gpu_times_parallel.append(gpu_time_parallel)
+
+    plt.figure(figsize=(10, 6))
+    plt.semilogy()
+    plt.plot(test_cores, cpu_times_parallel, label="CPU (Parallel)", marker='o')
+    plt.plot(test_cores, gpu_times_parallel, label="GPU (Parallel)", marker='x')
+    plt.xlabel("Number of Cores")
+    plt.ylabel("Time (seconds)")
+    plt.title("Performance of Match Filter on CPU vs GPU (Parallelized)")
+    plt.legend()
+    plt.grid(True)
+    plt.show()
