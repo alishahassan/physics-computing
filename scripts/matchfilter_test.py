@@ -21,7 +21,7 @@ def frozen_gpumatchfilter(ab):
 if __name__ == "__main__":
     list_size = 1000
     list_size_cpu = 1000
-    list_size_gpu = 500
+    list_size_gpu = 10000
     array_size = int(2**20)
     a_array = mx.array(mx.random.normal(shape=(array_size,), dtype=mx.float32) + 1j * mx.random.normal(shape=(array_size,), dtype=mx.float32)) 
     b_array = mx.array(mx.random.normal(shape=(array_size,), dtype=mx.float32) + 1j * mx.random.normal(shape=(array_size,), dtype=mx.float32)) 
