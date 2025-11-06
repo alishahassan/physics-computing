@@ -5,10 +5,10 @@
 
 ## Contents
 
-- **matchfilter_benchmark.py** — Runs benchmark tests comparing CPU and GPU performance across different core counts and saves results to an HDF5 file.
-- **matchfilter_plot.py** — Reads benchmark results and generates comparative plots (CPU vs GPU performance, speedup factors).
-- **multiprocessing tests** — Experiments using Python’s multiprocessing to evaluate how execution time scales with different numbers of cores.
-- **utility scripts** — Contain helper functions and examples for performing numerical operations in parallel or with partial functions.
+- **matchfilter_benchmark.py**: Runs benchmark tests comparing CPU and GPU performance across different core counts and saves results to an HDF5 file.
+- **matchfilter_plot.py**: Reads benchmark results and generates comparative plots (CPU vs GPU performance, speedup factors).
+- **multiprocessing tests**: Experiments using Python’s multiprocessing to evaluate how execution time scales with different numbers of cores.
+- **utility scripts**: Contain helper functions and examples for performing numerical operations in parallel or with partial functions.
 
 ## Purpose
 
